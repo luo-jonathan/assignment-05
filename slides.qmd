@@ -1,0 +1,94 @@
+---
+title: "WDI 2022: Key Patterns"
+author: "Jonathan Luo"
+date: today
+format:
+  revealjs:
+    theme: dark
+    transition: slide
+    slide-number: true
+jupyter: python3
+execute:
+  echo: false
+  warning: false
+  message: false
+bibliography: references.bib
+---
+
+```{python}
+import pandas as pd
+import matplotlib.pyplot as plt
+
+wdi = pd.read_csv("wdi.csv")
+
+# If there is a year column, filter to 2022
+if "year" in wdi.columns:
+    wdi = wdi[wdi["year"] == 2022].copy()
+
+indicator_1 = "gdp_per_capita"
+indicator_2 = "life_expectancy"
+indicator_3 = "unemployment_rate"
+
+selected = wdi[[indicator_1, indicator_2, indicator_3]].dropna()
+summary_table = selected.describe().T
+
+# Find country column for the bar chart
+country_candidates = [c for c in wdi.columns if "country" in c.lower()]
+country_col = country_candidates[0] if len(country_candidates) > 0 else None
+if country_col is None:
+    raise ValueError("Could not find a country column. Please set country_col manually.")
+
+top10 = (
+    wdi[[country_col, indicator_1]]
+    .dropna()
+    .sort_values(indicator_1, ascending=False)
+    .head(10)
+    .sort_values(indicator_1, ascending=True)
+)
+```
+
+## Title slide
+
+WDI 2022 exploratory analysis (3 indicators)
+
+## What we analyzed
+
+- GDP per capita
+- Life expectancy
+- Unemployment rate
+
+Source: World Bank WDI @worldbank_wdi
+
+## Key summary (table)
+
+```{python}
+summary_table
+```
+
+## Scatter plot: GDP per capita vs life expectancy
+
+```{python}
+plt.figure()
+plt.scatter(selected["gdp_per_capita"], selected["life_expectancy"])
+plt.title("GDP per Capita vs Life Expectancy (2022)")
+plt.xlabel("GDP per Capita")
+plt.ylabel("Life Expectancy")
+plt.show()
+```
+
+## Bar chart: Top 10 GDP per capita
+
+```{python}
+plt.figure()
+plt.barh(top10[country_col], top10["gdp_per_capita"])
+plt.title("Top 10 Countries by GDP per Capita (2022)")
+plt.xlabel("GDP per Capita")
+plt.ylabel("Country")
+plt.show()
+```
+
+## Conclusion
+
+- Higher GDP per capita tends to align with higher life expectancy.
+- A small number of countries dominate the top end of GDP per capita.
+- Next steps: explore inequality and education indicators.

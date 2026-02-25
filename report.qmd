@@ -1,0 +1,111 @@
+---
+title: "Assignment 05: WDI 2022 Exploratory Analysis"
+author: "Jonathan Luo"
+date: today
+jupyter: python3
+format:
+  html:
+    toc: true
+    number-sections: true
+  pdf:
+    toc: true
+    number-sections: true
+execute:
+  echo: false
+  warning: false
+  message: false
+bibliography: references.bib
+---
+
+## Introduction
+
+The dataset comes from the World Bank World Development Indicators (WDI) database @worldbank_wdi and the World Bank Open Data portal @worldbank_data.
+
+## Load data
+
+```{python}
+import pandas as pd
+
+wdi = pd.read_csv("wdi.csv")
+wdi.head()
+```
+
+## Selected indicators for analysis
+
+We analyze three key development indicators for 2022:
+- GDP per capita
+- Life expectancy
+- Unemployment rate
+
+```{python}
+indicator_1 = "gdp_per_capita"
+indicator_2 = "life_expectancy"
+indicator_3 = "unemployment_rate"
+
+# Keep only relevant columns (and drop missing values for cleaner analysis)
+selected = wdi[[indicator_1, indicator_2, indicator_3]].dropna()
+
+selected.head()
+```
+
+## Exploratory data analysis
+
+Table @tbl-summary shows the key descriptive statistics for the selected indicators.
+
+```{python}
+summary_table = selected.describe().T
+summary_table
+```
+
+```{python}
+#| label: tbl-summary
+#| tbl-cap: "Descriptive statistics for GDP per capita, life expectancy, and unemployment rate (2022). Source: World Development Indicators (World Bank)."
+summary_table
+```
+
+## Visualizations
+
+Figure @fig-scatter shows the relationship between GDP per capita and life expectancy across countries in 2022.
+
+```{python}
+#| label: fig-scatter
+#| fig-cap: "Scatter plot of GDP per capita vs Life Expectancy (2022). Source: World Development Indicators (World Bank)."
+
+import matplotlib.pyplot as plt
+
+plt.figure()
+plt.scatter(selected["gdp_per_capita"], selected["life_expectancy"])
+plt.title("GDP per Capita vs Life Expectancy (2022)")
+plt.xlabel("GDP per Capita")
+plt.ylabel("Life Expectancy")
+plt.show()
+```
+
+Figure @fig-bar shows the top 10 countries by GDP per capita in 2022.
+
+```{python}
+#| label: fig-bar
+#| fig-cap: "Top 10 countries by GDP per capita (2022). Source: World Development Indicators (World Bank)."
+
+# Try to automatically find a country column
+country_candidates = [c for c in wdi.columns if "country" in c.lower()]
+country_col = country_candidates[0] if len(country_candidates) > 0 else None
+
+if country_col is None:
+    raise ValueError("Could not find a country column. Please set country_col manually.")
+
+top10 = (
+    wdi[[country_col, "gdp_per_capita"]]
+    .dropna()
+    .sort_values("gdp_per_capita", ascending=False)
+    .head(10)
+    .sort_values("gdp_per_capita", ascending=True)
+)
+
+plt.figure()
+plt.barh(top10[country_col], top10["gdp_per_capita"])
+plt.title("Top 10 Countries by GDP per Capita (2022)")
+plt.xlabel("GDP per Capita")
+plt.ylabel("Country")
+plt.show()
+```
